@@ -58,7 +58,7 @@ func (d *ITG3200Driver) Start() error {
 		return err
 	}
 
-	return
+	return nil
 }
 
 func (d *ITG3200Driver) Halt() error {

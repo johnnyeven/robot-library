@@ -53,7 +53,7 @@ func (d *ADXL345Driver) Start() error {
 		return err
 	}
 
-	return
+	return nil
 }
 
 func (d *ADXL345Driver) Halt() error {

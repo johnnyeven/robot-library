@@ -51,7 +51,7 @@ func (d *HMC5883Driver) Start() error {
 		return err
 	}
 
-	return
+	return nil
 }
 
 func (d *HMC5883Driver) Halt() error {
