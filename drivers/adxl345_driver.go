@@ -14,7 +14,7 @@ const (
 	Adxl345ConfModeValue    = 0x08 // measurement mode
 	Adxl345ConfRangeAddress = 0x31
 	Adxl345ConfRangeValue   = 0x00 // +/- 2g
-	Adxl345GravityLSB       = 256
+	Adxl345LSB              = 256  // 根据芯片手册查询加速度计比例因子
 )
 
 type ADXL345Driver struct {
@@ -102,7 +102,7 @@ func (d *ADXL345Driver) Calibration(times int) {
 
 	d.offsetCalibration.X = float64(xTotal) / float64(times)
 	d.offsetCalibration.Y = float64(yTotal) / float64(times)
-	d.offsetCalibration.Z = float64(zTotal)/float64(times) + Adxl345GravityLSB // 抵消重力加速度1g
+	d.offsetCalibration.Z = float64(zTotal)/float64(times) + Adxl345LSB // 抵消重力加速度1g
 }
 
 // GetData fetches the latest data from the ADXL345

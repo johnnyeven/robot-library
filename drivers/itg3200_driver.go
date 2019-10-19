@@ -13,7 +13,8 @@ const (
 	ITG3200ConfSMPLAddress = 0x15
 	ITG3200ConfSMPLValue   = 0x07 // 每秒采样次数 7+1 次
 	ITG3200ConfDLPFAddress = 0x16
-	ITG3200ConfDLPFValue   = 0x1E // 000 11 110 FS_SEL=3 DLPF_CFG=6
+	ITG3200ConfDLPFValue   = 0x1E   // 000 11 110 FS_SEL=3 DLPF_CFG=6
+	ITG3200LSB             = 14.375 // 根据芯片手册查询陀螺仪比例因子
 )
 
 type ITG3200Driver struct {
