@@ -87,15 +87,15 @@ func (d *ITG3200Driver) initialize() (err error) {
 }
 
 func (d *ITG3200Driver) Calibration(times int) {
-	var xTotal, yTotal, zTotal int16
+	var xTotal, yTotal, zTotal int64
 	for i := 0; i < times; i++ {
 		originGyro, _, err := d.GetRawData()
 		if err != nil {
 			continue
 		}
-		xTotal += originGyro.X
-		yTotal += originGyro.Y
-		zTotal += originGyro.Z
+		xTotal += int64(originGyro.X)
+		yTotal += int64(originGyro.Y)
+		zTotal += int64(originGyro.Z)
 	}
 
 	d.offsetCalibration.X = float64(xTotal) / float64(times)

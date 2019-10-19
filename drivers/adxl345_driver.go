@@ -89,15 +89,15 @@ func (d *ADXL345Driver) initialize() (err error) {
 }
 
 func (d *ADXL345Driver) Calibration(times int) {
-	var xTotal, yTotal, zTotal int16
+	var xTotal, yTotal, zTotal int64
 	for i := 0; i < times; i++ {
 		origin, err := d.GetRawData()
 		if err != nil {
 			continue
 		}
-		xTotal += origin.X
-		yTotal += origin.Y
-		zTotal += origin.Z
+		xTotal += int64(origin.X)
+		yTotal += int64(origin.Y)
+		zTotal += int64(origin.Z)
 	}
 
 	d.offsetCalibration.X = float64(xTotal) / float64(times)
