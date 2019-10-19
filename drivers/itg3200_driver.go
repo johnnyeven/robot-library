@@ -10,14 +10,10 @@ import (
 const (
 	ITG3200Address         = 0x68
 	ITG3200DataAddress     = 0x1B
-	ITG3200ConfPwrAddress  = 0x3E
-	ITG3200ConfModeValue   = 0x00
 	ITG3200ConfSMPLAddress = 0x15
-	ITG3200ConfSMPLValue   = 0x07
+	ITG3200ConfSMPLValue   = 0x07 // 每秒采样次数 7+1 次
 	ITG3200ConfDLPFAddress = 0x16
-	ITG3200ConfDLPFValue   = 0x1E
-	ITG3200ConfIniAddress  = 0x17
-	ITG3200ConfIniValue    = 0x00
+	ITG3200ConfDLPFValue   = 0x1E // 000 11 110 FS_SEL=3 DLPF_CFG=6
 )
 
 type ITG3200Driver struct {
@@ -78,19 +74,11 @@ func (d *ITG3200Driver) initialize() (err error) {
 		return err
 	}
 
-	if _, err = d.connection.Write([]byte{ITG3200ConfPwrAddress, ITG3200ConfModeValue}); err != nil {
-		return
-	}
-
 	if _, err = d.connection.Write([]byte{ITG3200ConfSMPLAddress, ITG3200ConfSMPLValue}); err != nil {
 		return
 	}
 
 	if _, err = d.connection.Write([]byte{ITG3200ConfDLPFAddress, ITG3200ConfDLPFValue}); err != nil {
-		return
-	}
-
-	if _, err = d.connection.Write([]byte{ITG3200ConfIniAddress, ITG3200ConfIniValue}); err != nil {
 		return
 	}
 
