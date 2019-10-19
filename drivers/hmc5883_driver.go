@@ -10,8 +10,10 @@ import (
 const (
 	HMC5883CompassAddress  = 0x1E
 	HMC5883DataAddress     = 0x03
+	HMC5883ConfAAddress    = 0x00 // register A
+	HMC5883ConfAValue      = 0x70
 	HMC5883ConfModeAddress = 0x02 // select mode register
-	HMC5883ConfModeValue   = 0x00 // measurement mode
+	HMC5883ConfModeValue   = 0x00 // continues measurement mode
 )
 
 type HMC5883Driver struct {
@@ -69,6 +71,11 @@ func (d *HMC5883Driver) initialize() (err error) {
 	d.connection, err = d.connector.GetConnection(address, bus)
 	if err != nil {
 		return err
+	}
+
+	// setA
+	if _, err = d.connection.Write([]byte{HMC5883ConfAAddress, HMC5883ConfAValue}); err != nil {
+		return
 	}
 
 	// setMode
