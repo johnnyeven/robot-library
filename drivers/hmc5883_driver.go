@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/i2c"
+	"math"
 )
 
 const (
@@ -17,20 +18,22 @@ const (
 )
 
 type HMC5883Driver struct {
-	name       string
-	connector  i2c.Connector
-	connection i2c.Connection
-	Compass    i2c.ThreeDData
+	name                string
+	connector           i2c.Connector
+	connection          i2c.Connection
+	Compass             i2c.ThreeDData
+	magneticDeclination float64 // 地磁偏角
 	i2c.Config
 	gobot.Eventer
 }
 
-func NewHMC5883Driver(a i2c.Connector, options ...func(i2c.Config)) *HMC5883Driver {
+func NewHMC5883Driver(a i2c.Connector, magneticDeclination float64, options ...func(i2c.Config)) *HMC5883Driver {
 	m := &HMC5883Driver{
-		name:      gobot.DefaultName("HMC5883"),
-		connector: a,
-		Config:    i2c.NewConfig(),
-		Eventer:   gobot.NewEventer(),
+		name:                gobot.DefaultName("HMC5883"),
+		connector:           a,
+		magneticDeclination: magneticDeclination,
+		Config:              i2c.NewConfig(),
+		Eventer:             gobot.NewEventer(),
 	}
 
 	for _, option := range options {
@@ -87,17 +90,31 @@ func (d *HMC5883Driver) initialize() (err error) {
 }
 
 // GetData fetches the latest data from the HMC5883
-func (h *HMC5883Driver) GetData() (err error) {
-	if _, err = h.connection.Write([]byte{HMC5883DataAddress}); err != nil {
+func (d *HMC5883Driver) GetData() (err error) {
+	if _, err = d.connection.Write([]byte{HMC5883DataAddress}); err != nil {
 		return
 	}
 
 	data := make([]byte, 6)
-	_, err = h.connection.Read(data)
+	_, err = d.connection.Read(data)
 	if err != nil {
 		return
 	}
 
 	buf := bytes.NewBuffer(data)
-	return binary.Read(buf, binary.BigEndian, &h.Compass)
+	return binary.Read(buf, binary.BigEndian, &d.Compass)
+}
+
+func (d *HMC5883Driver) Heading() float64 {
+	radians := math.Atan2(float64(d.Compass.Y), float64(d.Compass.X))
+	if radians < 0 {
+		radians += 2 * math.Pi
+	}
+
+	degrees := (radians * 180 / math.Pi) + d.magneticDeclination
+	if degrees > 360 {
+		degrees -= 360
+	}
+
+	return degrees
 }
