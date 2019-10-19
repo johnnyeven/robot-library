@@ -17,11 +17,12 @@ const (
 )
 
 type ITG3200Driver struct {
-	name        string
-	connector   i2c.Connector
-	connection  i2c.Connection
-	Gyroscope   i2c.ThreeDData
-	Temperature int16
+	name              string
+	connector         i2c.Connector
+	connection        i2c.Connection
+	Gyroscope         ThreeDDataCalibration
+	offsetCalibration ThreeDDataCalibration
+	Temperature       int16
 	i2c.Config
 	gobot.Eventer
 }
@@ -85,22 +86,54 @@ func (d *ITG3200Driver) initialize() (err error) {
 	return nil
 }
 
+func (d *ITG3200Driver) Calibration(times int) {
+	var xTotal, yTotal, zTotal int16
+	for i := 0; i < times; i++ {
+		originGyro, _, err := d.GetRawData()
+		if err != nil {
+			continue
+		}
+		xTotal += originGyro.X
+		yTotal += originGyro.Y
+		zTotal += originGyro.Z
+	}
+
+	d.offsetCalibration.X = float64(xTotal) / float64(times)
+	d.offsetCalibration.Y = float64(yTotal) / float64(times)
+	d.offsetCalibration.Z = float64(zTotal) / float64(times)
+}
+
 // GetData fetches the latest data from the ITG3200
-func (h *ITG3200Driver) GetData() (err error) {
-	if _, err = h.connection.Write([]byte{ITG3200DataAddress}); err != nil {
+func (d *ITG3200Driver) GetRawData() (originGyro i2c.ThreeDData, originTemp int16, err error) {
+	if _, err = d.connection.Write([]byte{ITG3200DataAddress}); err != nil {
 		return
 	}
 
 	data := make([]byte, 8)
-	_, err = h.connection.Read(data)
+	_, err = d.connection.Read(data)
 	if err != nil {
 		return
 	}
 
 	buf := bytes.NewBuffer(data)
-	err = binary.Read(buf, binary.BigEndian, &h.Temperature)
+	err = binary.Read(buf, binary.BigEndian, &originTemp)
 	if err != nil {
 		return
 	}
-	return binary.Read(buf, binary.BigEndian, &h.Gyroscope)
+	err = binary.Read(buf, binary.BigEndian, &originGyro)
+	return
+}
+
+func (d *ITG3200Driver) GetData() (err error) {
+	originGyro, originTemp, err := d.GetRawData()
+	if err != nil {
+		return
+	}
+
+	d.Temperature = originTemp
+	d.Gyroscope.X = float64(originGyro.X) - d.offsetCalibration.X
+	d.Gyroscope.Y = float64(originGyro.Y) - d.offsetCalibration.Y
+	d.Gyroscope.Z = float64(originGyro.Z) - d.offsetCalibration.Z
+
+	return
 }
