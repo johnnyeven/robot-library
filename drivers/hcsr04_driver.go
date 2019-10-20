@@ -1,6 +1,7 @@
 package drivers
 
 import (
+	"fmt"
 	"gobot.io/x/gobot"
 	"time"
 )
@@ -43,6 +44,7 @@ func (d *HCSR04Driver) Connection() gobot.Connection {
 }
 
 func (d *HCSR04Driver) Measure() (float64, error) {
+	timer := time.NewTimer(5 * time.Second)
 	// 持续输出一个 10微秒的高电平启动超声波发射
 	err := d.connection.DigitalWrite(d.trigPin, 1)
 	if err != nil {
@@ -55,25 +57,38 @@ func (d *HCSR04Driver) Measure() (float64, error) {
 	}
 
 	// 等待输出端变为高电平，之后记录起始时间
+Start:
 	for {
-		echo, err := d.connection.DigitalRead(d.echoPin)
-		if err != nil {
-			return 0, err
-		}
-		if echo > 0 {
-			break
+		select {
+		case <-timer.C:
+			return 0, fmt.Errorf("[HCSR04Driver] Measure start err: timeout")
+		default:
+			echo, err := d.connection.DigitalRead(d.echoPin)
+			if err != nil {
+				return 0, err
+			}
+			if echo > 0 {
+				timer.Reset(5 * time.Second)
+				break Start
+			}
 		}
 	}
 	start := time.Now()
 
 	// 等待输出端变为低电平，之后记录结束时间
+Wait:
 	for {
-		echo, err := d.connection.DigitalRead(d.echoPin)
-		if err != nil {
-			return 0, err
-		}
-		if echo == 0 {
-			break
+		select {
+		case <-timer.C:
+			return 0, fmt.Errorf("[HCSR04Driver] Measure wait err: timeout")
+		default:
+			echo, err := d.connection.DigitalRead(d.echoPin)
+			if err != nil {
+				return 0, err
+			}
+			if echo == 0 {
+				break Wait
+			}
 		}
 	}
 	end := time.Now()
