@@ -13,8 +13,10 @@ const (
 	ITG3200ConfSMPLAddress = 0x15
 	ITG3200ConfSMPLValue   = 0x07 // 每秒采样次数 7+1 次
 	ITG3200ConfDLPFAddress = 0x16
-	ITG3200ConfDLPFValue   = 0x1E   // 000 11 110 FS_SEL=3 DLPF_CFG=6
-	ITG3200LSB             = 14.375 // 根据芯片手册查询陀螺仪比例因子
+	ITG3200ConfDLPFValue   = 0x1E      // 000 11 110 FS_SEL=3 DLPF_CFG=6
+	ITG3200LSB             = 14.375    // 根据芯片手册查询陀螺仪比例因子
+	ITG3200TempLSB         = 280       // 根据芯片手册查询温度传感器比例因子
+	ITG3200TempOffsetLSB   = 82.142857 // 根据芯片手册计算温度传感器偏移量 35 = (1 / 280) * (-13200) + offset
 )
 
 type ITG3200Driver struct {
